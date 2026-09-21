@@ -5,7 +5,7 @@
 **What is it worth, and how likely is each value?**
 A probabilistic DCF of Lumina Renewables S.p.A., a fictional mid-market Italian solar and wind operator. Instead of a single share price, the model treats six assumptions as probability distributions, re-runs the valuation 50,000 times and reports the full distribution of equity value per share. It comes with an **Excel model with live formulas**, an **investment memo**, a **presentation deck** and an **interactive simulator** that runs in the browser.
 
-**▶ [Open the live simulator](https://USERNAME.github.io/monte-carlo-dcf-valuation/)**
+**▶ [Open the live simulator](https://AlessandroRadice.github.io/monte-carlo-dcf-valuation/)**
 
 ![Equity value per share](distribution.png)
 
