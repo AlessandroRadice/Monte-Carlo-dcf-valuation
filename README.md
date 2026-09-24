@@ -46,7 +46,7 @@ This project has three goals:
 | `Lumina_MonteCarlo.xlsx` | Excel model: Assumptions · DCF Base Case · Simulation · Results · Sensitivity · Price Paths |
 | `Lumina_MonteCarlo_Memo.pdf` | Investment memo: a plain-language walk-through of the method, the distribution, the risk attribution and the limits |
 | `Lumina_MonteCarlo_Deck.pdf` | Five-slide presentation of the case and the findings |
-| `index.html` | Live simulator: sliders for every assumption, 2k / 10k / 25k runs, live sensitivity and simulated share-price paths |
+| `index.html` | Live simulator: sliders for every assumption, 10k / 25k / 50k runs, live sensitivity, simulated share-price paths and links to every file |
 | `*.png` | Charts used in this README |
 
 ### The Excel model
@@ -57,7 +57,7 @@ This project has three goals:
 - **Price Paths:** Geometric Brownian Motion simulation of the share price over five years.
 
 ### The live simulator
-Drag any assumption, widen the uncertainty or change the number of runs, and the histogram, percentiles and sensitivity bars update instantly. A second panel simulates five-year share-price paths for a chosen drift and volatility. It is a single HTML file with no dependencies.
+Drag any assumption, widen the uncertainty or change the number of runs, and the histogram, percentiles and sensitivity bars update instantly. A second panel simulates five-year share-price paths for a chosen drift and volatility. The page opens with the results of the 50,000-run study and links to the Excel model, memo and deck. It is a single HTML file.
 
 ![Live simulator](live_simulator.png)
 

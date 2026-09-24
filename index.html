@@ -2,239 +2,313 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Alessandro Radice">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lumina Renewables · Live Monte Carlo Valuation</title>
+<meta name="description" content="Monte Carlo DCF of Lumina Renewables: 50,000 simulated valuations, live simulator, sensitivity and share-price paths.">
+<title>Lumina Monte Carlo DCF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root{
-    --navy:#0B2545; --steel:#13315C; --gold:#C9A24B; --paper:#F4F7FA;
-    --line:#DBE3EC; --ink:#0B2545; --mute:#6B7B8C; --red:#B23A48; --green:#2E7D5B;
-    --panel:#FFFFFF;
+    color-scheme:light;
+    --ground:#f0f0ee; --panel:#ffffff; --panel-2:#f7f7f5; --ink:#232427; --ink-2:#4e5157; --mute:#7c7f85;
+    --line:#dcdcd8; --line-2:#ebebe8; --accent:#b8832a; --accent-soft:rgba(184,131,42,.13);
+    --down:#a8413f; --up:#2f6f58; --bar:#44474d; --path:rgba(68,71,77,.13);
+    --serif:"Instrument Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;background:#EAF0F6;color:var(--ink);
-    font-family:"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;}
-  .mono{font-family:"SFMono-Regular",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
-    font-variant-numeric:tabular-nums;}
-  .wrap{max-width:1200px;margin:0 auto;padding:22px 20px 40px;}
-  header{display:flex;align-items:baseline;justify-content:space-between;
-    border-bottom:3px solid var(--navy);padding-bottom:12px;flex-wrap:wrap;gap:6px;}
-  h1{font-size:22px;margin:0;letter-spacing:.2px;}
-  h1 span{color:var(--gold);}
-  .tag{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:1.4px;}
-  .grid{display:grid;grid-template-columns:320px 1fr;gap:18px;margin-top:18px;}
-  @media(max-width:860px){.grid{grid-template-columns:1fr;}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
-    box-shadow:0 1px 2px rgba(11,37,69,.04);}
-  .rail{padding:16px 16px 8px;}
-  .rail h2,.viz h2{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;
-    color:var(--mute);margin:0 0 12px;border-left:3px solid var(--gold);padding-left:8px;}
-  .ctrl{margin-bottom:15px;}
-  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
-  .ctrl label{font-size:12.5px;color:var(--ink);font-weight:600;}
-  .ctrl .val{font-size:13px;color:var(--navy);font-weight:700;}
-  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:3px;
-    background:linear-gradient(90deg,var(--steel),var(--gold));outline:none;}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
-    border-radius:50%;background:#fff;border:2px solid var(--navy);cursor:pointer;
-    box-shadow:0 1px 3px rgba(0,0,0,.25);}
-  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;
-    background:#fff;border:2px solid var(--navy);cursor:pointer;}
-  .sub{font-size:10.5px;color:var(--mute);margin-top:3px;}
-  .company{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:4px 16px 14px;}
-  .company .f label{font-size:10.5px;color:var(--mute);display:block;margin-bottom:2px;}
-  .company .f input{width:100%;border:1px solid var(--line);border-radius:5px;padding:5px 7px;
-    font-size:13px;color:var(--navy);font-weight:600;}
-  .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
-  .seg button{flex:1;border:0;background:#fff;padding:6px 0;font-size:12px;color:var(--mute);
-    cursor:pointer;font-weight:600;}
-  .seg button.on{background:var(--navy);color:#fff;}
-  .viz{padding:16px;}
-  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
-  @media(max-width:520px){.kpis{grid-template-columns:repeat(2,1fr);}}
-  .kpi{background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--navy);
-    border-radius:6px;padding:9px 11px;}
-  .kpi.hero{border-top-color:var(--gold);}
-  .kpi .l{font-size:9px;color:var(--mute);text-transform:uppercase;letter-spacing:.6px;}
-  .kpi .v{font-size:20px;font-weight:800;margin-top:2px;color:var(--navy);}
-  .kpi .v.sm{font-size:16px;}
-  canvas{width:100%;display:block;}
-  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--mute);margin-top:6px;}
-  .legend i{display:inline-block;width:18px;height:0;border-top:2px dashed;margin-right:5px;
-    vertical-align:middle;}
-  .sens{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
-  .sbar{display:grid;grid-template-columns:120px 1fr 64px;align-items:center;gap:8px;
-    font-size:11.5px;margin:5px 0;}
-  .sbar .name{color:var(--ink);font-weight:600;}
-  .track{position:relative;height:14px;background:var(--paper);border-radius:3px;}
-  .track .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line);}
-  .track .fill{position:absolute;top:2px;bottom:2px;border-radius:2px;transition:width .25s,left .25s;}
-  .foot{font-size:10px;color:var(--mute);margin-top:16px;line-height:1.5;}
-  .pill{display:inline-block;background:var(--navy);color:#fff;font-size:10px;padding:2px 8px;
-    border-radius:20px;letter-spacing:.5px;}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--ground);color:var(--ink);font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding-inline:24px;padding-block:28px 56px}
+  @media(max-width:640px){.wrap{padding-inline:16px;padding-block:18px 40px}}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* header */
+  .top{display:block;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+  .eyebrow{font:400 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+  h1{font:400 clamp(42px,6.4vw,80px)/1.0 var(--serif);margin:10px 0 14px;letter-spacing:-.01em;text-wrap:balance}
+  h1 em{color:var(--accent)}
+  h1 span{display:block;font-size:.44em;line-height:1.2;color:var(--ink-2);margin-top:10px;letter-spacing:0}
+  .dek{margin:0;max-width:66ch;color:var(--ink-2);font-size:17px}
+  .files{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .files a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font:600 13px/1 var(--sans);padding:10px 14px;border:1px solid var(--line);background:var(--panel);border-radius:6px;color:var(--ink)}
+  .files a:hover{border-color:var(--ink)}
+  .files a.gh{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+  .files svg{width:16px;height:16px;flex:none}
+
+  /* study results */
+  .study{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin-top:22px;border-bottom:1px solid var(--line)}
+  .study>div{padding:14px 16px 16px 0}
+  .study>div+div{padding-left:16px;border-left:1px solid var(--line)}
+  .study .l{font-size:12px;color:var(--mute);line-height:1.35}
+  .study .v{font:600 24px/1.2 var(--mono);margin-top:4px;white-space:nowrap}
+  .study .v.sm{font-size:19px;line-height:1.5}
+  .study .v.gold{color:var(--accent)}
+  .study-note{font-size:13.5px;color:var(--ink-2);margin:12px 0 0;max-width:90ch}
+  @media(max-width:860px){.study{grid-template-columns:repeat(2,minmax(0,1fr))}.study>div,.study>div+div{padding:12px 12px 12px 0;border-left:0;border-top:1px solid var(--line)}}
+
+  h2{font:400 clamp(28px,3.6vw,42px)/1.1 var(--serif);margin:0 0 8px;text-wrap:balance}
+  .lead{margin:0 0 18px;color:var(--ink-2);max-width:76ch}
+  section{margin-top:44px}
+
+  /* simulator */
+  .sim{display:grid;grid-template-columns:300px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  @media(max-width:900px){.sim{grid-template-columns:minmax(0,1fr)}}
+  .controls{background:var(--panel-2);border-right:1px solid var(--line);padding:18px 18px 20px;display:flex;flex-direction:column;gap:18px}
+  @media(max-width:900px){.controls{border-right:0;border-bottom:1px solid var(--line)}}
+  fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+  legend{font:400 11.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:0;margin-bottom:10px}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+  .ctrl label{font-size:13.5px;font-weight:600}
+  .ctrl output{font:600 13px var(--mono);color:var(--ink)}
+  .ctrl .hint{font-size:11.5px;color:var(--mute);margin-top:4px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;margin:6px 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--panel);border:2px solid var(--ink);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--panel);border:2px solid var(--ink);cursor:pointer}
+  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+  .seg button{flex:1;border:0;background:transparent;padding:8px 0;font:600 12.5px var(--mono);color:var(--mute);cursor:pointer}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--ink);color:var(--ground)}
+  .company{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .company label{display:block;font-size:11.5px;color:var(--mute);margin-bottom:3px}
+  .company input{width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:7px 8px;font:600 13px var(--mono)}
+  .reset{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 12px;font:600 12.5px var(--sans);cursor:pointer}
+  .reset:hover{border-color:var(--ink)}
+
+  .out{padding:18px 20px 20px;min-width:0}
+  .out-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .out h3{font:600 12.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0}
+  .runs{font:600 12px var(--mono);color:var(--mute)}
+  .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;margin:14px 0 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .kpi{padding:10px 10px 12px 0}
+  .kpi+.kpi{padding-left:12px;border-left:1px solid var(--line-2)}
+  .kpi .l{font-size:11.5px;color:var(--mute);line-height:1.3}
+  .kpi .v{font:600 19px/1.3 var(--mono);margin-top:2px}
+  .kpi.hero .v{color:var(--accent)}
+  @media(max-width:700px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi:nth-child(4){border-left:0;padding-left:0}.kpi:nth-child(n+4){border-top:1px solid var(--line-2)}}
+  canvas{display:block;width:100%}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-top:6px}
+  .legend i{display:inline-block;width:18px;height:0;border-top:2px dashed;margin-right:6px;vertical-align:middle}
+  .legend i.band{height:10px;border:0;background:var(--accent-soft);vertical-align:-1px}
+
+  .sens{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  .sens h3{margin-bottom:10px}
+  .sbar{display:grid;grid-template-columns:130px minmax(0,1fr) 56px;align-items:center;gap:10px;font-size:13px;margin:6px 0}
+  .track{position:relative;height:12px}
+  .track .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--mute)}
+  .track .fill{position:absolute;top:0;bottom:0;border-radius:2px;transition:left .25s,width .25s}
+  .sbar .c{text-align:right;font:600 12.5px var(--mono)}
+  @media (prefers-reduced-motion: reduce){.track .fill{transition:none}}
+
+  /* paths */
+  .paths{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px 20px}
+  .pathctl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:18px;align-items:end;margin-bottom:12px}
+  @media(max-width:640px){.pathctl{grid-template-columns:minmax(0,1fr)}}
+  .replay{border:0;background:var(--ink);color:var(--ground);border-radius:6px;padding:10px 16px;font:600 13px var(--sans);cursor:pointer}
+  .pk{display:flex;gap:24px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin:0 0 8px}
+  .pk b{display:block;font:600 17px var(--mono);color:var(--ink)}
+
+  /* method */
+  .cols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:32px}
+  @media(max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{font:600 11.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:left;padding:0 10px 8px 0;border-bottom:1.5px solid var(--ink)}
+  td{padding:9px 10px 9px 0;border-bottom:1px solid var(--line)}
+  td.n{font-family:var(--mono);white-space:nowrap}
+  ul.plain{margin:0;padding-left:18px;color:var(--ink-2);font-size:14px}
+  ul.plain li{margin-bottom:8px}
+  footer{margin-top:48px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--mute)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
+
+  <header class="top">
     <div>
-      <h1>Lumina Renewables <span>· Live Monte Carlo</span></h1>
-      <div class="tag">Drag an assumption · watch the valuation distribution react</div>
+      <div class="eyebrow">Probabilistic valuation · Alessandro Radice</div>
+      <h1>Monte Carlo <em>DCF Valuation</em><span>Lumina Renewables S.p.A.</span></h1>
+      <p class="dek">A five-year DCF of a mid-market Italian solar and wind operator, run 50,000 times with six uncertain inputs. The result is a distribution of equity value per share instead of a single number. The company is fictional; the method is not.</p>
+    <nav class="files" aria-label="Project files">
+      <a href="Lumina_MonteCarlo.xlsx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="1.5" width="11" height="13" rx="1.5"/><path d="M5 5.5h6M5 8h6M5 10.5h4"/></svg>Excel model</a>
+      <a href="Lumina_MonteCarlo_Memo.pdf"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1.5h5.5L12.5 4.5v10h-8.5z"/><path d="M9.5 1.5v3h3"/></svg>Memo</a>
+      <a href="Lumina_MonteCarlo_Deck.pdf"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M8 11.5v3M5.5 14.5h5"/></svg>Deck</a>
+      <a class="gh" href="https://github.com/AlessandroRadice/Monte-Carlo-dcf-valuation"><svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Repository</a>
+    </nav>
     </div>
-    <span class="pill mono" id="itersPill">10,000 runs</span>
+
   </header>
 
-  <div class="grid">
-    <!-- CONTROL RAIL -->
-    <div>
-      <div class="card rail">
-        <h2>Assumptions (central value)</h2>
-        <div class="ctrl" data-k="g">
-          <div class="row"><label>Revenue growth p.a.</label><span class="val mono" id="g_v"></span></div>
-          <input type="range" id="g" min="0" max="20" step="0.5" value="9">
-        </div>
-        <div class="ctrl" data-k="m">
-          <div class="row"><label>EBITDA margin</label><span class="val mono" id="m_v"></span></div>
-          <input type="range" id="m" min="25" max="55" step="0.5" value="42">
-        </div>
-        <div class="ctrl" data-k="w">
-          <div class="row"><label>WACC</label><span class="val mono" id="w_v"></span></div>
-          <input type="range" id="w" min="5" max="14" step="0.1" value="8.5">
-          <div class="sub">Capital intensity · the dominant driver</div>
-        </div>
-        <div class="ctrl" data-k="t">
-          <div class="row"><label>Tax rate</label><span class="val mono" id="t_v"></span></div>
-          <input type="range" id="t" min="20" max="40" step="0.5" value="26">
-          <div class="sub">IRES base · upside skew to a windfall scenario</div>
-        </div>
-        <div class="ctrl" data-k="tg">
-          <div class="row"><label>Terminal growth</label><span class="val mono" id="tg_v"></span></div>
-          <input type="range" id="tg" min="0" max="3.5" step="0.05" value="2.0">
-        </div>
-        <div class="ctrl" data-k="cx">
-          <div class="row"><label>CapEx (% revenue)</label><span class="val mono" id="cx_v"></span></div>
-          <input type="range" id="cx" min="8" max="28" step="0.5" value="16">
-        </div>
-        <div class="ctrl">
-          <div class="row"><label>Uncertainty (spread)</label><span class="val mono" id="u_v"></span></div>
-          <input type="range" id="u" min="0.4" max="2" step="0.1" value="1">
-          <div class="sub">Widens every distribution at once</div>
-        </div>
-        <div class="ctrl">
-          <div class="row"><label>Iterations</label><span></span></div>
-          <div class="seg" id="iterSeg">
-            <button data-n="2000">2k</button>
-            <button data-n="10000" class="on">10k</button>
-            <button data-n="25000">25k</button>
+  <div class="study" aria-label="Results of the 50,000-run study">
+    <div><div class="l">Deterministic base case</div><div class="v">€14.92</div></div>
+    <div><div class="l">Simulated median (P50)</div><div class="v gold">€12.46</div></div>
+    <div><div class="l">Downside (P5) / upside (P95)</div><div class="v sm">€5.35 / €23.63</div></div>
+    <div><div class="l">Market price</div><div class="v">€11.50</div></div>
+    <div><div class="l">Probability value exceeds market</div><div class="v">57%</div></div>
+  </div>
+  <p class="study-note">The base case sits 19.7% above the simulated median. Most input distributions have their long tail running against value (tax up to 35%, CapEx up to 22%, margin down to 36%), so the most likely inputs do not produce the typical outcome. WACC is the largest single driver of the spread.</p>
+
+  <section id="simulator">
+    <h2>Run it yourself</h2>
+    <p class="lead">Move any assumption and the model re-runs every iteration in your browser. The chart shows where the equity value per share lands; the bars below show which input moves it most.</p>
+
+    <div class="sim">
+      <div class="controls">
+        <fieldset>
+          <legend>Operations</legend>
+          <div class="ctrl"><div class="row"><label for="g">Revenue growth p.a.</label><output id="g_v" for="g"></output></div>
+            <input type="range" id="g" min="0" max="20" step="0.5" value="9"></div>
+          <div class="ctrl"><div class="row"><label for="m">EBITDA margin</label><output id="m_v" for="m"></output></div>
+            <input type="range" id="m" min="25" max="55" step="0.5" value="42"></div>
+          <div class="ctrl"><div class="row"><label for="cx">CapEx, % of revenue</label><output id="cx_v" for="cx"></output></div>
+            <input type="range" id="cx" min="8" max="28" step="0.5" value="16"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Discounting and tax</legend>
+          <div class="ctrl"><div class="row"><label for="w">WACC</label><output id="w_v" for="w"></output></div>
+            <input type="range" id="w" min="5" max="14" step="0.1" value="8.5">
+            <div class="hint">The dominant driver for a capital-intensive operator</div></div>
+          <div class="ctrl"><div class="row"><label for="tg">Terminal growth</label><output id="tg_v" for="tg"></output></div>
+            <input type="range" id="tg" min="0" max="3.5" step="0.05" value="2.0"></div>
+          <div class="ctrl"><div class="row"><label for="t">Tax rate</label><output id="t_v" for="t"></output></div>
+            <input type="range" id="t" min="20" max="40" step="0.5" value="26">
+            <div class="hint">IRES base, skewed up for windfall-tax risk</div></div>
+        </fieldset>
+        <fieldset>
+          <legend>Simulation</legend>
+          <div class="ctrl"><div class="row"><label for="u">Uncertainty</label><output id="u_v" for="u"></output></div>
+            <input type="range" id="u" min="0.4" max="2" step="0.1" value="1">
+            <div class="hint">Widens or narrows every distribution at once</div></div>
+          <div class="ctrl"><div class="row"><label>Iterations</label></div>
+            <div class="seg" id="iterSeg" role="group" aria-label="Iterations">
+              <button type="button" data-n="10000">10k</button>
+              <button type="button" data-n="25000">25k</button>
+              <button type="button" data-n="50000" class="on">50k</button>
+            </div></div>
+        </fieldset>
+        <fieldset>
+          <legend>Company</legend>
+          <div class="company">
+            <div><label for="rev0">Base revenue (€m)</label><input id="rev0" type="number" value="145"></div>
+            <div><label for="nd">Net debt (€m)</label><input id="nd" type="number" value="185"></div>
+            <div><label for="sh">Shares (m)</label><input id="sh" type="number" value="25"></div>
+            <div><label for="mkt">Market price (€)</label><input id="mkt" type="number" value="11.5" step="0.1"></div>
           </div>
-        </div>
+        </fieldset>
+        <button type="button" class="reset" id="reset">Reset to the study's assumptions</button>
       </div>
 
-      <div class="card" style="margin-top:14px;">
-        <h2 style="padding:14px 16px 0;font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:var(--mute);border-left:3px solid var(--gold);margin:0 0 0 16px;">Company</h2>
-        <div class="company">
-          <div class="f"><label>Base revenue (€m)</label><input id="rev0" type="number" value="145"></div>
-          <div class="f"><label>Net debt (€m)</label><input id="nd" type="number" value="185"></div>
-          <div class="f"><label>Shares (m)</label><input id="sh" type="number" value="25"></div>
-          <div class="f"><label>Market price (€)</label><input id="mkt" type="number" value="11.5" step="0.1"></div>
+      <div class="out">
+        <div class="out-head"><h3>Equity value per share</h3><span class="runs" id="runs">50,000 runs</span></div>
+        <div class="kpis">
+          <div class="kpi hero"><div class="l">Median (P50)</div><div class="v" id="k_med">…</div></div>
+          <div class="kpi"><div class="l">Mean</div><div class="v" id="k_mean">…</div></div>
+          <div class="kpi"><div class="l">P5, downside</div><div class="v" id="k_p5">…</div></div>
+          <div class="kpi"><div class="l">P95, upside</div><div class="v" id="k_p95">…</div></div>
+          <div class="kpi"><div class="l">Base case</div><div class="v" id="k_base">…</div></div>
+          <div class="kpi"><div class="l">Above market</div><div class="v" id="k_prob">…</div></div>
+        </div>
+        <canvas id="cv" height="320" aria-label="Histogram of simulated equity value per share"></canvas>
+        <div class="legend">
+          <span><i class="band"></i>P5 to P95</span>
+          <span><i style="border-color:var(--ink);border-top-style:solid"></i>Median</span>
+          <span><i style="border-color:var(--ink-2);border-top-style:dotted"></i>Base case</span>
+          <span><i style="border-color:var(--mute)"></i>Market price</span>
+        </div>
+        <div class="sens">
+          <h3>What moves the value</h3>
+          <div id="sensList"></div>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- VIZ -->
-    <div class="card viz">
-      <h2>Implied equity value per share</h2>
-      <div class="kpis">
-        <div class="kpi hero"><div class="l">Median (P50)</div><div class="v mono" id="k_med">—</div></div>
-        <div class="kpi"><div class="l">Mean</div><div class="v mono sm" id="k_mean">—</div></div>
-        <div class="kpi"><div class="l">P(value &gt; market)</div><div class="v mono sm" id="k_prob">—</div></div>
-        <div class="kpi"><div class="l">P5 · downside</div><div class="v mono sm" id="k_p5">—</div></div>
-        <div class="kpi"><div class="l">P95 · upside</div><div class="v mono sm" id="k_p95">—</div></div>
-        <div class="kpi"><div class="l">Base case (single point)</div><div class="v mono sm" id="k_base">—</div></div>
+  <section id="paths">
+    <h2>How the share price might travel</h2>
+    <p class="lead">A separate exercise from the DCF: 240 simulated five-year paths of the share price (geometric Brownian motion, monthly steps) starting from the market price above. The cone widens because random shocks compound over time.</p>
+    <div class="paths">
+      <div class="pathctl">
+        <div class="ctrl"><div class="row"><label for="pvol">Volatility</label><output id="pv_v" for="pvol"></output></div>
+          <input id="pvol" type="range" min="10" max="70" step="1" value="38"></div>
+        <div class="ctrl"><div class="row"><label for="pdrift">Annual drift</label><output id="pd_v" for="pdrift"></output></div>
+          <input id="pdrift" type="range" min="-5" max="15" step="0.5" value="7"></div>
+        <button type="button" id="preplay" class="replay">Replay</button>
       </div>
-      <canvas id="cv" height="300"></canvas>
+      <div class="pk">
+        <span>Median in year 5<b id="pk_med">…</b></span>
+        <span>P5 to P95<b id="pk_band">…</b></span>
+        <span>Probability it doubles<b id="pk_dbl">…</b></span>
+        <span>Probability it ends lower<b id="pk_bel">…</b></span>
+      </div>
+      <canvas id="pcv" height="320" aria-label="Simulated share-price paths"></canvas>
       <div class="legend">
-        <span><i style="border-color:var(--red)"></i>P5</span>
-        <span><i style="border-color:var(--gold)"></i>Median</span>
-        <span><i style="border-color:var(--green)"></i>P95</span>
-        <span><i style="border-color:var(--navy);border-top-style:dotted"></i>Base case</span>
-        <span><i style="border-color:var(--mute);border-top-style:solid"></i>Market</span>
+        <span><i style="border-color:var(--ink)"></i>P5 and P95</span>
+        <span><i style="border-color:var(--ink);border-top-style:solid"></i>Median path</span>
+        <span>Each coloured line is one simulated path</span>
       </div>
+    </div>
+  </section>
 
-      <div class="sens">
-        <h2 style="border:0;padding:0;margin:0 0 8px;">Live sensitivity · correlation of each input with value</h2>
-        <div id="sensList"></div>
+  <section id="method">
+    <div class="cols">
+      <div>
+        <h2>The six uncertain inputs</h2>
+        <p class="lead">Each iteration draws one value for every input. Revenue growth and EBITDA margin move together (correlation +0.35 through a Gaussian copula), so strong years come with strong margins.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Input</th><th>Distribution</th><th>Low / mode / high</th></tr></thead>
+          <tbody>
+            <tr><td>Revenue growth p.a.</td><td>Triangular</td><td class="n">4% / 9% / 14%</td></tr>
+            <tr><td>EBITDA margin</td><td>Triangular</td><td class="n">36% / 42% / 46%</td></tr>
+            <tr><td>WACC</td><td>Normal</td><td class="n">8.5% ± 1.1%</td></tr>
+            <tr><td>Tax rate</td><td>Triangular</td><td class="n">24% / 26% / 35%</td></tr>
+            <tr><td>Terminal growth</td><td>Triangular</td><td class="n">1.0% / 2.0% / 2.75%</td></tr>
+            <tr><td>CapEx, % of revenue</td><td>Triangular</td><td class="n">12% / 16% / 22%</td></tr>
+          </tbody>
+        </table></div>
       </div>
-      <div class="foot">
-        Fictional company, illustrative figures — not investment advice. Engine: triangular &amp; normal
-        marginals, revenue-growth/EBITDA-margin correlation +0.35 (Gaussian copula), 1.5% minimum WACC–g
-        spread. The same model that produced the Excel workbook and PDF memo, running in your browser.
+      <div>
+        <h2>Fixed parameters and limits</h2>
+        <ul class="plain">
+          <li>Base revenue €145m, D&amp;A 13% of revenue, change in working capital 3% of incremental revenue, net debt €185m, 25.0m shares.</li>
+          <li>WACC is kept at least 1.5 points above terminal growth, so an extreme draw cannot produce an infinite terminal value.</li>
+          <li>Lumina is fictional and the ranges are judgement, not market data. The model prices only the risks it defines.</li>
+          <li>The Excel workbook reproduces 2,000 of the 50,000 iterations with live formulas, so its statistics differ slightly from the figures above.</li>
+          <li>This page re-runs the simulation with fresh random draws, so its numbers move a little each time.</li>
+        </ul>
       </div>
     </div>
-  </div>
+  </section>
 
-  <style>
-    #pathsCard{margin-top:18px;}
-    .pathctl{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:10px;}
-    .pathctl .pc{flex:1;min-width:160px;}
-    .pathctl label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px;}
-    .pathctl .replay{border:1px solid var(--navy);background:var(--navy);color:#fff;border-radius:6px;
-      padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;height:33px;}
-    .pathctl .replay:hover{background:var(--steel);}
-    .pkpis{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--mute);margin:2px 0 6px;}
-    .pkpis b{color:var(--navy);font-size:14px;margin-left:4px;}
-  </style>
-  <div class="card viz" id="pathsCard">
-    <h2>Share-price paths over 5 years</h2>
-    <div class="pathctl">
-      <div class="pc"><label>Volatility <span id="pv_v" class="mono"></span></label>
-        <input id="pvol" type="range" min="10" max="70" step="1" value="38"></div>
-      <div class="pc"><label>Annual drift <span id="pd_v" class="mono"></span></label>
-        <input id="pdrift" type="range" min="-5" max="15" step="0.5" value="7"></div>
-      <button id="preplay" class="replay">&#9654; Replay</button>
-    </div>
-    <div class="pkpis">
-      <span>Median <b id="pk_med" class="mono">—</b></span>
-      <span>P5&ndash;P95 <b id="pk_band" class="mono">—</b></span>
-      <span>P(doubles) <b id="pk_dbl" class="mono">—</b></span>
-      <span>P(below start) <b id="pk_bel" class="mono">—</b></span>
-    </div>
-    <canvas id="pcv" height="320"></canvas>
-    <div class="foot">Each line is one simulated path of the share price (Geometric Brownian Motion), all starting
-    from the market price set above. <b>Drift</b> is the average yearly pull; <b>volatility</b> is the size of the
-    random monthly shocks. The cone widens because randomness compounds with time. Black = median path,
-    dashed = P5/P95 band.</div>
-  </div>
+  <footer><span>Alessandro Radice · educational project, not investment advice</span><span>Python · Excel · JavaScript</span></footer>
 </div>
 
 <script>
-// ---------- distribution helpers ----------
+// ---------- distribution helpers (same engine as the Excel model and memo) ----------
 function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();
   return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-function ncdf(x){ // standard normal CDF (Abramowitz-Stegun)
-  const t=1/(1+0.2316419*Math.abs(x));
-  const d=0.3989423*Math.exp(-x*x/2);
-  let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
-  return x>0?1-p:p;}
+function ncdf(x){const t=1/(1+0.2316419*Math.abs(x));const d=0.3989423*Math.exp(-x*x/2);
+  let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p;}
 function triInv(u,a,c,b){const fc=(c-a)/(b-a);
   return u<fc? a+Math.sqrt(u*(b-a)*(c-a)) : b-Math.sqrt((1-u)*(b-a)*(b-c));}
-
-// base spreads (offsets from mode at uncertainty=1), in same %-point units as sliders
 const OFF={g:[-5,5], m:[-6,4], t:[-2,9], tg:[-1.0,0.75], cx:[-4,6]};
-const WSD=1.1, RHO=0.35;
-const DA=0.13, NWC=0.03, YEARS=5;
-
+const WSD=1.1, RHO=0.35, DA=0.13, NWC=0.03, YEARS=5, NMAX=50000;
+const DEFAULTS={g:9,m:42,cx:16,w:8.5,tg:2.0,t:26,u:1,rev0:145,nd:185,sh:25,mkt:11.5};
 function P(id){return parseFloat(document.getElementById(id).value);}
-let N=10000, raf=null;
-const arrPS=new Float64Array(25000);
-const inG=new Float64Array(25000),inM=new Float64Array(25000),inW=new Float64Array(25000),
-      inT=new Float64Array(25000),inTg=new Float64Array(25000),inCx=new Float64Array(25000);
+let N=50000;
+const arrPS=new Float64Array(NMAX), inG=new Float64Array(NMAX), inM=new Float64Array(NMAX), inW=new Float64Array(NMAX),
+      inT=new Float64Array(NMAX), inTg=new Float64Array(NMAX), inCx=new Float64Array(NMAX);
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 
 function simulate(){
   const u=P('u');
   const gM=P('g')/100, mM=P('m')/100, wM=P('w')/100, tM=P('t')/100, tgM=P('tg')/100, cxM=P('cx')/100;
   const REV0=P('rev0'), ND=P('nd'), SH=P('sh');
-  // triangular bounds (scaled by uncertainty), clamped to sane ranges
   const gA=Math.max(0,gM+OFF.g[0]/100*u), gB=gM+OFF.g[1]/100*u;
   const mA=Math.max(0.05,mM+OFF.m[0]/100*u), mB=Math.min(0.7,mM+OFF.m[1]/100*u);
   const tA=Math.max(0.05,tM+OFF.t[0]/100*u), tB=Math.min(0.6,tM+OFF.t[1]/100*u);
@@ -242,223 +316,174 @@ function simulate(){
   const cxA=Math.max(0.02,cxM+OFF.cx[0]/100*u), cxB=cxM+OFF.cx[1]/100*u;
   const wsd=WSD/100*u;
   for(let i=0;i<N;i++){
-    // correlated growth & margin via Gaussian copula
     const z1=randn(), z2=RHO*z1+Math.sqrt(1-RHO*RHO)*randn();
-    const g=triInv(ncdf(z1),gA,gM,gB);
-    const m=triInv(ncdf(z2),mA,mM,mB);
+    const g=triInv(ncdf(z1),gA,gM,gB), m=triInv(ncdf(z2),mA,mM,mB);
     let w=wM+wsd*randn(); w=Math.min(0.125,Math.max(0.055,w));
-    const tax=triInv(Math.random(),tA,tM,tB);
-    const tg=triInv(Math.random(),tgA,tgM,tgB);
-    const cx=triInv(Math.random(),cxA,cxM,cxB);
-    const we=Math.max(w,tg+0.015);
-    const A=(m-DA)*(1-tax)+DA-cx;
+    const tax=triInv(Math.random(),tA,tM,tB), tg=triInv(Math.random(),tgA,tgM,tgB), cx=triInv(Math.random(),cxA,cxM,cxB);
+    const we=Math.max(w,tg+0.015), A=(m-DA)*(1-tax)+DA-cx;
     let rev=REV0, ev=0, ufcf=0;
-    for(let tt=1;tt<=YEARS;tt++){
-      const prev=rev; rev=rev*(1+g);
-      ufcf=rev*A-(rev-prev)*NWC;
-      ev+=ufcf/Math.pow(1+we,tt);
-    }
-    const tv=ufcf*(1+tg)/(we-tg);
-    ev+=tv/Math.pow(1+we,YEARS);
-    const ps=(ev-ND)/SH;
-    arrPS[i]=ps; inG[i]=g; inM[i]=m; inW[i]=w; inT[i]=tax; inTg[i]=tg; inCx[i]=cx;
+    for(let tt=1;tt<=YEARS;tt++){const prev=rev; rev=rev*(1+g); ufcf=rev*A-(rev-prev)*NWC; ev+=ufcf/Math.pow(1+we,tt);}
+    ev+=ufcf*(1+tg)/(we-tg)/Math.pow(1+we,YEARS);
+    arrPS[i]=(ev-ND)/SH; inG[i]=g; inM[i]=m; inW[i]=w; inT[i]=tax; inTg[i]=tg; inCx[i]=cx;
   }
-  // deterministic base case
-  let rev=REV0, ev=0, ufcf=0; const we=Math.max(wM,tgM+0.015);
-  const A=(mM-DA)*(1-tM)+DA-cxM;
+  let rev=REV0, ev=0, ufcf=0; const we=Math.max(wM,tgM+0.015), A=(mM-DA)*(1-tM)+DA-cxM;
   for(let tt=1;tt<=YEARS;tt++){const prev=rev;rev=rev*(1+gM);ufcf=rev*A-(rev-prev)*NWC;ev+=ufcf/Math.pow(1+we,tt);}
   ev+=ufcf*(1+tgM)/(we-tgM)/Math.pow(1+we,YEARS);
   return {base:(ev-ND)/SH};
 }
-
-function pct(sorted,p){const idx=(sorted.length-1)*p;const lo=Math.floor(idx),hi=Math.ceil(idx);
-  return sorted[lo]+(sorted[hi]-sorted[lo])*(idx-lo);}
+function pct(s,p){const idx=(s.length-1)*p, lo=Math.floor(idx), hi=Math.ceil(idx); return s[lo]+(s[hi]-s[lo])*(idx-lo);}
 function corr(x,y,n){let sx=0,sy=0;for(let i=0;i<n;i++){sx+=x[i];sy+=y[i];}
-  const mx=sx/n,my=sy/n;let cxy=0,vx=0,vy=0;
-  for(let i=0;i<n;i++){const a=x[i]-mx,b=y[i]-my;cxy+=a*b;vx+=a*a;vy+=b*b;}
+  const mx=sx/n,my=sy/n;let cxy=0,vx=0,vy=0;for(let i=0;i<n;i++){const a=x[i]-mx,b=y[i]-my;cxy+=a*b;vx+=a*a;vy+=b*b;}
   return cxy/Math.sqrt(vx*vy);}
+const eur=v=>'€'+v.toFixed(2);
 
-// ---------- animated histogram ----------
-const cv=document.getElementById('cv'); const ctx=cv.getContext('2d');
+// ---------- histogram ----------
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 let curH=null, tgtH=null, anim=null, meta=null;
-const reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function setStats(s){
-  const f=v=>'€'+v.toFixed(2);
-  document.getElementById('k_med').textContent=f(s.p50);
-  document.getElementById('k_mean').textContent=f(s.mean);
-  document.getElementById('k_p5').textContent=f(s.p5);
-  document.getElementById('k_p95').textContent=f(s.p95);
-  document.getElementById('k_base').textContent=f(s.base);
-  document.getElementById('k_prob').textContent=(s.prob*100).toFixed(0)+'%';
-}
 function setSens(){
   const names={w:'WACC',cx:'CapEx %',m:'EBITDA margin',g:'Revenue growth',tg:'Terminal growth',t:'Tax rate'};
   const cols={w:inW,cx:inCx,m:inM,g:inG,tg:inTg,t:inT};
-  let items=Object.keys(cols).map(k=>[k,corr(cols[k],arrPS,N)]);
-  items.sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const items=Object.keys(cols).map(k=>[k,corr(cols[k],arrPS,N)]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
   document.getElementById('sensList').innerHTML=items.map(([k,c])=>{
-    const w=Math.min(50,Math.abs(c)*55);
-    const pos=c>=0; const color=pos?'var(--green)':'var(--red)';
-    const left=pos?50:50-w;
-    return `<div class="sbar"><span class="name">${names[k]}</span>
-      <div class="track"><div class="mid"></div>
-      <div class="fill" style="left:${left}%;width:${w}%;background:${color}"></div></div>
-      <span class="mono" style="text-align:right;color:${color};font-weight:700">${c>=0?'+':''}${c.toFixed(2)}</span></div>`;
-  }).join('');
+    const w=Math.min(50,Math.abs(c)*55), pos=c>=0, col=pos?'var(--up)':'var(--down)', left=pos?50:50-w;
+    return `<div class="sbar"><span>${names[k]}</span><div class="track"><div class="mid"></div>
+      <div class="fill" style="left:${left}%;width:${w}%;background:${col}"></div></div>
+      <span class="c" style="color:${col}">${c>=0?'+':'−'}${Math.abs(c).toFixed(2)}</span></div>`;}).join('');
 }
-
 function recompute(){
   const {base}=simulate();
-  const view=arrPS.subarray(0,N);
-  const sorted=Float64Array.from(view).sort();
-  const p5=pct(sorted,0.05),p50=pct(sorted,0.5),p95=pct(sorted,0.95);
-  let sum=0;for(let i=0;i<N;i++)sum+=view[i];const mean=sum/N;
-  const mkt=P('mkt');let above=0;for(let i=0;i<N;i++)if(view[i]>mkt)above++;
-  setStats({p5,p50,p95,mean,base,prob:above/N});
-  // histogram bins over robust range
-  const lo=pct(sorted,0.005), hi=pct(sorted,0.985);
-  const BINS=58, w=(hi-lo)/BINS; const h=new Float64Array(BINS);
-  for(let i=0;i<N;i++){let b=Math.floor((view[i]-lo)/w);if(b<0||b>=BINS)continue;h[b]++;}
-  let mx=0;for(let i=0;i<BINS;i++)mx=Math.max(mx,h[i]);
-  for(let i=0;i<BINS;i++)h[i]/=mx;
-  meta={lo,hi,w,p5,p50,p95,base,mkt};
-  tgtH=h;
-  if(!curH||curH.length!==BINS){curH=new Float64Array(BINS);}
+  const view=arrPS.subarray(0,N), sorted=Float64Array.from(view).sort();
+  const p5=pct(sorted,0.05), p50=pct(sorted,0.5), p95=pct(sorted,0.95);
+  let sum=0; for(let i=0;i<N;i++) sum+=view[i];
+  const mkt=P('mkt'); let above=0; for(let i=0;i<N;i++) if(view[i]>mkt) above++;
+  document.getElementById('k_med').textContent=eur(p50);
+  document.getElementById('k_mean').textContent=eur(sum/N);
+  document.getElementById('k_p5').textContent=eur(p5);
+  document.getElementById('k_p95').textContent=eur(p95);
+  document.getElementById('k_base').textContent=eur(base);
+  document.getElementById('k_prob').textContent=Math.round(above/N*100)+'%';
+  const lo=pct(sorted,0.005), hi=pct(sorted,0.985), BINS=60, w=(hi-lo)/BINS, h=new Float64Array(BINS);
+  for(let i=0;i<N;i++){const b=Math.floor((view[i]-lo)/w); if(b>=0&&b<BINS) h[b]++;}
+  let mx=0; for(let i=0;i<BINS;i++) mx=Math.max(mx,h[i]); for(let i=0;i<BINS;i++) h[i]/=mx;
+  meta={lo,hi,w,p5,p50,p95,base,mkt}; tgtH=h;
+  if(!curH||curH.length!==BINS) curH=new Float64Array(BINS);
   setSens();
-  if(reduce){curH=Float64Array.from(tgtH);draw();}
-  else if(!anim)animate();
+  if(reduce){curH=Float64Array.from(tgtH); draw();} else if(!anim) animate();
 }
-function animate(){
-  let moving=false;
-  for(let i=0;i<curH.length;i++){curH[i]+=(tgtH[i]-curH[i])*0.25;
-    if(Math.abs(tgtH[i]-curH[i])>0.002)moving=true;}
-  draw();
-  anim=moving?requestAnimationFrame(animate):null;
-}
+function animate(){let moving=false;
+  for(let i=0;i<curH.length;i++){curH[i]+=(tgtH[i]-curH[i])*0.25; if(Math.abs(tgtH[i]-curH[i])>0.002) moving=true;}
+  draw(); anim=moving?requestAnimationFrame(animate):null;}
+function niceStep(range,target){const raw=range/target, p=Math.pow(10,Math.floor(Math.log10(raw))), f=raw/p;
+  return (f<1.5?1:f<3?2:f<7?5:10)*p;}
 function draw(){
-  const dpr=window.devicePixelRatio||1; const W=cv.clientWidth, H=300;
-  cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-  const padL=8,padR=8,padB=26,padT=8; const plotW=W-padL-padR, plotH=H-padT-padB;
-  const x=v=>padL+(v-meta.lo)/(meta.hi-meta.lo)*plotW;
+  const dpr=window.devicePixelRatio||1, W=cv.clientWidth, H=320;
+  cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const padL=4,padR=4,padT=46,padB=26, pw=W-padL-padR, ph=H-padT-padB;
+  const x=v=>padL+(v-meta.lo)/(meta.hi-meta.lo)*pw;
+  const C={bar:css('--bar'),band:css('--accent-soft'),acc:css('--accent'),ink:css('--ink'),ink2:css('--ink-2'),down:css('--down'),mute:css('--mute'),line:css('--line')};
+  // P5-P95 band
+  ctx.fillStyle=C.band; ctx.fillRect(x(Math.max(meta.p5,meta.lo)),padT+ph*0.08,x(Math.min(meta.p95,meta.hi))-x(Math.max(meta.p5,meta.lo)),ph*0.92);
   // bars
-  const n=curH.length, bw=plotW/n;
-  for(let i=0;i<n;i++){const bh=curH[i]*plotH; 
-    ctx.fillStyle='#13315C';
-    ctx.fillRect(padL+i*bw+0.4,padT+plotH-bh,bw-0.8,bh);}
-  // axis baseline
-  ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;ctx.beginPath();
-  ctx.moveTo(padL,padT+plotH+.5);ctx.lineTo(W-padR,padT+plotH+.5);ctx.stroke();
-  // reference lines
-  function vline(val,color,dash,label){
-    if(val<meta.lo||val>meta.hi)return;
-    const xx=x(val);ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.setLineDash(dash);
-    ctx.beginPath();ctx.moveTo(xx,padT);ctx.lineTo(xx,padT+plotH);ctx.stroke();ctx.restore();
-    ctx.fillStyle=color;ctx.font='600 10px "Helvetica Neue",Arial';ctx.textAlign='center';
-    ctx.fillText(label,xx,padT+10);
-  }
-  vline(meta.p5,'#B23A48',[4,3],'P5');
-  vline(meta.p50,'#C9A24B',[4,3],'Median');
-  vline(meta.p95,'#2E7D5B',[4,3],'P95');
-  vline(meta.base,'#0B2545',[1,2],'Base');
-  vline(meta.mkt,'#6B7B8C',[],'Mkt');
-  // x ticks
-  ctx.fillStyle='#6B7B8C';ctx.font='10px "Helvetica Neue",Arial';ctx.textAlign='center';
-  const ticks=5;for(let i=0;i<=ticks;i++){const v=meta.lo+(meta.hi-meta.lo)*i/ticks;
-    ctx.fillText('€'+v.toFixed(0),x(v),H-8);}
+  const n=curH.length, bw=pw/n; ctx.fillStyle=C.bar;
+  for(let i=0;i<n;i++){const bh=curH[i]*ph; ctx.fillRect(padL+i*bw+0.5,padT+ph-bh,Math.max(0.5,bw-1),bh);}
+  // axis
+  ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padL,padT+ph+.5); ctx.lineTo(W-padR,padT+ph+.5); ctx.stroke();
+  ctx.fillStyle=C.mute; ctx.font='11px "IBM Plex Mono",monospace'; ctx.textAlign='center';
+  const st=niceStep(meta.hi-meta.lo,6);
+  for(let v=Math.ceil(meta.lo/st)*st; v<=meta.hi; v+=st){ctx.fillText('€'+v.toFixed(0),x(v),H-8);}
+  // reference lines with labels stacked so they never collide
+  const refs=[[meta.p50,C.ink,[],'Median '+eur(meta.p50)],[meta.base,C.ink2,[1.5,3],'Base '+eur(meta.base)],[meta.mkt,C.mute,[5,4],'Market '+eur(meta.mkt)]]
+    .filter(r=>r[0]>=meta.lo&&r[0]<=meta.hi).sort((a,b)=>a[0]-b[0]);
+  ctx.font='600 11.5px "IBM Plex Sans",Arial,sans-serif';
+  const placed=[];
+  refs.forEach(([v,col,dash,lab])=>{
+    const xx=x(v), tw=ctx.measureText(lab).width+8;
+    let row=0; while(placed.some(p=>p.row===row && Math.abs(p.x-xx)<(p.w+tw)/2)) row++;
+    placed.push({x:xx,w:tw,row});
+    const ly=14+row*16;
+    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(xx,ly+4); ctx.lineTo(xx,padT+ph); ctx.stroke(); ctx.restore();
+    ctx.fillStyle=col; ctx.textAlign=xx<60?'left':(xx>W-60?'right':'center');
+    ctx.fillText(lab,xx,ly);
+  });
 }
 
 // ---------- bindings ----------
-function fmtPct(id,dec=1){return P(id).toFixed(dec)+'%';}
-function refreshLabels(){
-  document.getElementById('g_v').textContent=fmtPct('g');
-  document.getElementById('m_v').textContent=fmtPct('m');
-  document.getElementById('w_v').textContent=fmtPct('w');
-  document.getElementById('t_v').textContent=fmtPct('t');
-  document.getElementById('tg_v').textContent=P('tg').toFixed(2)+'%';
-  document.getElementById('cx_v').textContent=fmtPct('cx');
-  document.getElementById('u_v').textContent=P('u').toFixed(1)+'×';
-}
+const fmt={g:v=>v.toFixed(1)+'%',m:v=>v.toFixed(1)+'%',w:v=>v.toFixed(1)+'%',t:v=>v.toFixed(1)+'%',tg:v=>v.toFixed(2)+'%',cx:v=>v.toFixed(1)+'%',u:v=>v.toFixed(1)+'×'};
+function refreshLabels(){Object.keys(fmt).forEach(k=>document.getElementById(k+'_v').textContent=fmt[k](P(k)));}
 let pending=null;
-function schedule(){refreshLabels();if(pending)cancelAnimationFrame(pending);
-  pending=requestAnimationFrame(()=>{pending=null;recompute();});}
-document.querySelectorAll('input[type=range],.company input').forEach(el=>{
-  el.addEventListener('input',schedule);});
-document.querySelectorAll('#iterSeg button').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('#iterSeg button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');N=+b.dataset.n;
-    document.getElementById('itersPill').textContent=(N/1000)+'k runs';
-    schedule();});
-});
-window.addEventListener('resize',()=>{if(meta)draw();});
-refreshLabels();recompute();
+function schedule(){refreshLabels(); if(pending) cancelAnimationFrame(pending); pending=requestAnimationFrame(()=>{pending=null; recompute();});}
+document.querySelectorAll('.controls input').forEach(el=>el.addEventListener('input',schedule));
+document.querySelectorAll('#iterSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#iterSeg button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  N=+b.dataset.n; document.getElementById('runs').textContent=N.toLocaleString('en-US')+' runs'; schedule();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  Object.entries(DEFAULTS).forEach(([k,v])=>document.getElementById(k).value=v); schedule(); pSchedule();});
+window.addEventListener('resize',()=>{if(meta) draw(); if(pmeta) pDraw();});
+refreshLabels(); recompute();
 
-// ===================== SHARE-PRICE PATHS (GBM) =====================
+// ---------- share-price paths (GBM) ----------
 const PSTEPS=60, PYEARS=5, PDT=PYEARS/PSTEPS, PNPATH=240;
 const pcv=document.getElementById('pcv'), pctx=pcv.getContext('2d');
 let ppaths=null, pmeta=null, pStep=0, pAnimId=null;
-
 function pRecompute(){
   const s0=P('mkt'), mu=P('pdrift')/100, sig=P('pvol')/100;
   document.getElementById('pv_v').textContent=P('pvol').toFixed(0)+'%';
   document.getElementById('pd_v').textContent=P('pdrift').toFixed(1)+'%';
   ppaths=[];
-  for(let i=0;i<PNPATH;i++){
-    const row=new Float64Array(PSTEPS+1); row[0]=s0;
+  for(let i=0;i<PNPATH;i++){const row=new Float64Array(PSTEPS+1); row[0]=s0;
     const d=(mu-0.5*sig*sig)*PDT, v=sig*Math.sqrt(PDT);
-    for(let t=1;t<=PSTEPS;t++) row[t]=row[t-1]*Math.exp(d+v*randn());
-    ppaths.push(row);
-  }
-  const p5=new Float64Array(PSTEPS+1),p50=new Float64Array(PSTEPS+1),p95=new Float64Array(PSTEPS+1);
-  const col=new Float64Array(PNPATH);
-  for(let t=0;t<=PSTEPS;t++){
-    for(let i=0;i<PNPATH;i++)col[i]=ppaths[i][t];
-    const s=Float64Array.from(col).sort();
-    p5[t]=pct(s,0.05); p50[t]=pct(s,0.5); p95[t]=pct(s,0.95);
-  }
-  let dbl=0,bel=0; for(let i=0;i<PNPATH;i++){const v=ppaths[i][PSTEPS];if(v>2*s0)dbl++;if(v<s0)bel++;}
-  const f=v=>'€'+v.toFixed(2);
-  document.getElementById('pk_med').textContent=f(p50[PSTEPS]);
-  document.getElementById('pk_band').textContent=f(p5[PSTEPS])+'–'+f(p95[PSTEPS]);
-  document.getElementById('pk_dbl').textContent=(dbl/PNPATH*100).toFixed(0)+'%';
-  document.getElementById('pk_bel').textContent=(bel/PNPATH*100).toFixed(0)+'%';
-  let ymax=0; for(let t=0;t<=PSTEPS;t++)ymax=Math.max(ymax,p95[t]); ymax*=1.18;
-  pmeta={p5,p50,p95,ymax};
-  pStep=0;
-  if(reduce){pStep=PSTEPS;pDraw();} else {if(pAnimId)cancelAnimationFrame(pAnimId);pAnimate();}
+    for(let t=1;t<=PSTEPS;t++) row[t]=row[t-1]*Math.exp(d+v*randn()); ppaths.push(row);}
+  const p5=new Float64Array(PSTEPS+1), p50=new Float64Array(PSTEPS+1), p95=new Float64Array(PSTEPS+1), col=new Float64Array(PNPATH);
+  for(let t=0;t<=PSTEPS;t++){for(let i=0;i<PNPATH;i++) col[i]=ppaths[i][t];
+    const s=Float64Array.from(col).sort(); p5[t]=pct(s,0.05); p50[t]=pct(s,0.5); p95[t]=pct(s,0.95);}
+  let dbl=0, bel=0; for(let i=0;i<PNPATH;i++){const v=ppaths[i][PSTEPS]; if(v>2*s0) dbl++; if(v<s0) bel++;}
+  document.getElementById('pk_med').textContent=eur(p50[PSTEPS]);
+  document.getElementById('pk_band').textContent=eur(p5[PSTEPS])+' to '+eur(p95[PSTEPS]);
+  document.getElementById('pk_dbl').textContent=Math.round(dbl/PNPATH*100)+'%';
+  document.getElementById('pk_bel').textContent=Math.round(bel/PNPATH*100)+'%';
+  const peaks=Float64Array.from(ppaths.map(r=>Math.max(...r))).sort(); const ymax=pct(peaks,0.99)*1.05;
+  pmeta={p5,p50,p95,ymax,s0}; pStep=0;
+  if(reduce){pStep=PSTEPS; pDraw();} else {if(pAnimId) cancelAnimationFrame(pAnimId); pAnimate();}
 }
-function pAnimate(){ pStep=Math.min(PSTEPS,pStep+2); pDraw();
-  pAnimId = pStep<PSTEPS ? requestAnimationFrame(pAnimate) : null; }
+function pAnimate(){pStep=Math.min(PSTEPS,pStep+2); pDraw(); pAnimId=pStep<PSTEPS?requestAnimationFrame(pAnimate):null;}
 function pDraw(){
   const dpr=window.devicePixelRatio||1, W=pcv.clientWidth, H=320;
   pcv.width=W*dpr; pcv.height=H*dpr; pctx.setTransform(dpr,0,0,dpr,0,0); pctx.clearRect(0,0,W,H);
-  const padL=46,padR=12,padB=24,padT=8, plotW=W-padL-padR, plotH=H-padT-padB;
-  const xs=t=>padL+t/PSTEPS*plotW, ys=v=>padT+plotH-Math.min(v,pmeta.ymax)/pmeta.ymax*plotH;
-  pctx.fillStyle='#6B7B8C'; pctx.font='10px "Helvetica Neue",Arial'; pctx.textAlign='right';
-  for(let g=0;g<=4;g++){const v=pmeta.ymax*g/4,y=ys(v);
-    pctx.strokeStyle='#EEF2F6';pctx.beginPath();pctx.moveTo(padL,y);pctx.lineTo(W-padR,y);pctx.stroke();
-    pctx.fillText('€'+v.toFixed(0),padL-6,y+3);}
-  for(let i=0;i<PNPATH;i++){
-    pctx.strokeStyle=`hsla(${(i*360/PNPATH)|0},78%,55%,0.5)`; pctx.lineWidth=0.6;
-    pctx.beginPath(); pctx.moveTo(xs(0),ys(ppaths[i][0]));
-    for(let t=1;t<=pStep;t++) pctx.lineTo(xs(t),ys(ppaths[i][t])); pctx.stroke();
-  }
-  function band(arr,c,dash){pctx.save();pctx.strokeStyle=c;pctx.lineWidth=dash?1.6:2.4;
-    if(dash)pctx.setLineDash([5,3]);pctx.beginPath();pctx.moveTo(xs(0),ys(arr[0]));
-    for(let t=1;t<=pStep;t++)pctx.lineTo(xs(t),ys(arr[t]));pctx.stroke();pctx.restore();}
-  band(pmeta.p5,'#0B2545',true); band(pmeta.p95,'#0B2545',true); band(pmeta.p50,'#0B2545',false);
-  pctx.fillStyle='#6B7B8C'; pctx.textAlign='center';
-  for(let yr=0;yr<=5;yr++) pctx.fillText(yr,xs(yr*12),H-8);
+  const padL=48,padR=10,padB=26,padT=10, pw=W-padL-padR, ph=H-padT-padB;
+  const xs=t=>padL+t/PSTEPS*pw, ys=v=>padT+ph-v/pmeta.ymax*ph;
+  const C={band:css('--accent-soft'),ink:css('--ink'),mute:css('--mute'),line:css('--line-2'),path:css('--path'),acc:css('--accent')};
+  pctx.font='11px "IBM Plex Mono",monospace'; pctx.fillStyle=C.mute; pctx.textAlign='right';
+  const st=niceStep(pmeta.ymax,5);
+  for(let v=0; v<=pmeta.ymax; v+=st){const y=ys(v); pctx.strokeStyle=C.line; pctx.lineWidth=1;
+    pctx.beginPath(); pctx.moveTo(padL,y); pctx.lineTo(W-padR,y); pctx.stroke(); pctx.fillText('€'+v.toFixed(0),padL-8,y+4);}
+  pctx.save(); pctx.beginPath(); pctx.rect(padL,padT,pw,ph); pctx.clip();
+  // band
+  pctx.fillStyle=C.band; pctx.beginPath(); pctx.moveTo(xs(0),ys(pmeta.p95[0]));
+  for(let t=1;t<=pStep;t++) pctx.lineTo(xs(t),ys(pmeta.p95[t]));
+  for(let t=pStep;t>=0;t--) pctx.lineTo(xs(t),ys(pmeta.p5[t])); pctx.closePath(); pctx.fill();
+  // paths, one colour each
+  pctx.lineWidth=0.9;
+  for(let i=0;i<PNPATH;i++){pctx.strokeStyle=`hsla(${(i*360/PNPATH)|0},70%,48%,0.45)`; pctx.beginPath(); pctx.moveTo(xs(0),ys(ppaths[i][0]));
+    for(let t=1;t<=pStep;t++) pctx.lineTo(xs(t),ys(ppaths[i][t])); pctx.stroke();}
+  // P5 and P95 edges
+  [pmeta.p5,pmeta.p95].forEach(arr=>{pctx.save(); pctx.strokeStyle=C.ink; pctx.lineWidth=1.6; pctx.setLineDash([6,4]);
+    pctx.beginPath(); pctx.moveTo(xs(0),ys(arr[0])); for(let t=1;t<=pStep;t++) pctx.lineTo(xs(t),ys(arr[t])); pctx.stroke(); pctx.restore();});
+  // median
+  pctx.strokeStyle=C.ink; pctx.lineWidth=2.8; pctx.beginPath(); pctx.moveTo(xs(0),ys(pmeta.p50[0]));
+  for(let t=1;t<=pStep;t++) pctx.lineTo(xs(t),ys(pmeta.p50[t])); pctx.stroke();
+  pctx.restore();
+  // start marker and years
+  pctx.fillStyle=C.acc; pctx.beginPath(); pctx.arc(xs(0),ys(pmeta.s0),4,0,Math.PI*2); pctx.fill();
+  pctx.fillStyle=C.mute; pctx.textAlign='center';
+  for(let yr=0;yr<=5;yr++){pctx.textAlign=yr===0?'left':(yr===5?'right':'center'); pctx.fillText(yr===0?'today':'year '+yr,xs(yr*12),H-8);}
 }
 let pPend=null;
-function pSchedule(){if(pPend)cancelAnimationFrame(pPend);pPend=requestAnimationFrame(()=>{pPend=null;pRecompute();});}
-document.getElementById('pvol').addEventListener('input',pSchedule);
-document.getElementById('pdrift').addEventListener('input',pSchedule);
-document.getElementById('mkt').addEventListener('input',pSchedule);
-document.getElementById('preplay').addEventListener('click',()=>{pStep=0;if(pAnimId)cancelAnimationFrame(pAnimId);pAnimate();});
-window.addEventListener('resize',()=>{if(pmeta)pDraw();});
+function pSchedule(){if(pPend) cancelAnimationFrame(pPend); pPend=requestAnimationFrame(()=>{pPend=null; pRecompute();});}
+['pvol','pdrift','mkt'].forEach(id=>document.getElementById(id).addEventListener('input',pSchedule));
+document.getElementById('preplay').addEventListener('click',()=>{pStep=0; if(pAnimId) cancelAnimationFrame(pAnimId); pAnimate();});
 pRecompute();
 </script>
 </body>
