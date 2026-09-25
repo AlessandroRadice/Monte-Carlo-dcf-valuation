@@ -56,6 +56,26 @@
   .lead{margin:0 0 18px;color:var(--ink-2);max-width:76ch}
   section{margin-top:44px}
 
+  /* checks */
+  .checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px 22px}
+  .card h3{font:400 26px/1.15 var(--serif);margin:0 0 6px}
+  .card p{margin:0 0 14px;color:var(--ink-2);font-size:14px}
+  .card table{width:100%;border-collapse:collapse;font-size:14px}
+  .card th{font:400 11px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute);text-align:right;padding:0 0 8px;border-bottom:1px solid var(--ink)}
+  .card th:first-child,.card td:first-child{text-align:left}
+  .card td{font-family:var(--mono);text-align:right;padding:9px 0;border-bottom:1px solid var(--line-2)}
+  .card tr.hl td{background:var(--accent-soft)}
+  .split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+  .split>div{border-top:2px solid var(--bar);padding-top:8px}
+  .split>div.ev{border-top-color:var(--accent)}
+  .split .l{font-size:12px;color:var(--mute)}
+  .split .v{font:600 26px/1.2 var(--mono)}
+  .bar2{height:14px;display:flex;border-radius:3px;overflow:hidden;margin:4px 0 6px}
+  .bar2 span{display:block}
+  .note2{font-size:12.5px;color:var(--mute);margin:12px 0 0}
+  @media(max-width:860px){.checks{grid-template-columns:minmax(0,1fr)}}
+
   /* simulator */
   .sim{display:grid;grid-template-columns:300px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
   @media(max-width:900px){.sim{grid-template-columns:minmax(0,1fr)}}
@@ -140,6 +160,7 @@
       <a href="Lumina_MonteCarlo.xlsx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="1.5" width="11" height="13" rx="1.5"/><path d="M5 5.5h6M5 8h6M5 10.5h4"/></svg>Excel model</a>
       <a href="Lumina_MonteCarlo_Memo.pdf"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1.5h5.5L12.5 4.5v10h-8.5z"/><path d="M9.5 1.5v3h3"/></svg>Memo</a>
       <a href="Lumina_MonteCarlo_Deck.pdf"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M8 11.5v3M5.5 14.5h5"/></svg>Deck</a>
+      <a href="https://github.com/AlessandroRadice/Monte-Carlo-dcf-valuation/blob/main/Lumina_MonteCarlo_Analysis.ipynb"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5"/></svg>Notebook</a>
       <a class="gh" href="https://github.com/AlessandroRadice/Monte-Carlo-dcf-valuation"><svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Repository</a>
     </nav>
     </div>
@@ -148,12 +169,12 @@
 
   <div class="study" aria-label="Results of the 50,000-run study">
     <div><div class="l">Deterministic base case</div><div class="v">€14.92</div></div>
-    <div><div class="l">Simulated median (P50)</div><div class="v gold">€12.46</div></div>
-    <div><div class="l">Downside (P5) / upside (P95)</div><div class="v sm">€5.35 / €23.63</div></div>
+    <div><div class="l">Simulated median (P50)</div><div class="v gold">€12.49</div></div>
+    <div><div class="l">Downside (P5) / upside (P95)</div><div class="v sm">€5.35 / €23.61</div></div>
     <div><div class="l">Market price</div><div class="v">€11.50</div></div>
-    <div><div class="l">Probability value exceeds market</div><div class="v">57%</div></div>
+    <div><div class="l">Probability value exceeds market</div><div class="v">57.5%</div></div>
   </div>
-  <p class="study-note">The base case sits 19.7% above the simulated median. Most input distributions have their long tail running against value (tax up to 35%, CapEx up to 22%, margin down to 36%), so the most likely inputs do not produce the typical outcome. WACC is the largest single driver of the spread.</p>
+  <p class="study-note">The base case sits 19.5% above the simulated median. Most input distributions have their long tail running against value (tax up to 35%, CapEx up to 22%, margin down to 36%), so the most likely inputs do not produce the typical outcome. WACC is the largest single driver of the spread.</p>
 
   <section id="simulator">
     <h2>Run it yourself</h2>
@@ -257,6 +278,30 @@
     </div>
   </section>
 
+  <section id="checks">
+    <h2>Two checks on the answer</h2>
+    <p class="lead">A simulation is itself an estimate, and a smooth tax tail can hide a decision. The notebook tests both with the same model as this page.</p>
+    <div class="checks">
+      <div class="card">
+        <h3>How many runs are enough</h3>
+        <p>The whole simulation re-run 200 times with fresh random numbers at each size: the 95% range of each result across re-runs. The error halves when the runs quadruple, and the tails settle more slowly than the centre.</p>
+        <div class="tablewrap"><table><thead><tr><th>Iterations</th><th>Median</th><th>P5</th><th>P95</th></tr></thead><tbody><tr><td>1,000</td><td>±€0.42</td><td>±€0.43</td><td>±€1.29</td></tr><tr class="hl"><td>2,000 · Excel</td><td>±€0.28</td><td>±€0.34</td><td>±€0.90</td></tr><tr><td>10,000</td><td>±€0.13</td><td>±€0.15</td><td>±€0.35</td></tr><tr><td>50,000</td><td>±€0.06</td><td>±€0.06</td><td>±€0.18</td></tr></tbody></table></div>
+        <p class="note2">The Excel workbook's 2,000 iterations pin the median to ±€0.28; Python and Excel agree on every one of them.</p>
+      </div>
+      <div class="card">
+        <h3>The windfall tax as an event</h3>
+        <p>Instead of a long tail up to 35%, an ordinary 24% to 28% rate plus a 9-point surcharge with a 25% chance. The average tax is the same and the headline barely moves (median €12.53), but the outcome splits in two.</p>
+        <div class="split">
+          <div><div class="l">Median, no surcharge</div><div class="v num">€13.29</div><div class="l">value above €11.50 in 64% of runs</div></div>
+          <div class="ev"><div class="l">Median, surcharge</div><div class="v num">€10.20</div><div class="l">value above €11.50 in 40% of runs</div></div>
+        </div>
+        <div class="l" style="font-size:12px;color:var(--mute)">Share of runs: three in four without, one in four with</div>
+        <div class="bar2" role="img" aria-label="75% of runs without surcharge, 25% with"><span style="width:75%;background:var(--bar)"></span><span style="width:25%;background:var(--accent)"></span></div>
+        <p class="note2">About <b class="num" style="color:var(--ink)">€3.09</b> a share rides on one political decision: a risk to monitor, not a tail to average away.</p>
+      </div>
+    </div>
+  </section>
+
   <section id="method">
     <div class="cols">
       <div>
@@ -280,7 +325,7 @@
           <li>Base revenue €145m, D&amp;A 13% of revenue, change in working capital 3% of incremental revenue, net debt €185m, 25.0m shares.</li>
           <li>WACC is kept at least 1.5 points above terminal growth, so an extreme draw cannot produce an infinite terminal value.</li>
           <li>Lumina is fictional and the ranges are judgement, not market data. The model prices only the risks it defines.</li>
-          <li>The Excel workbook reproduces 2,000 of the 50,000 iterations with live formulas, so its statistics differ slightly from the figures above.</li>
+          <li>The Excel workbook holds the first 2,000 of the 50,000 draws with live formulas, so its statistics differ slightly from the figures above; the notebook reproduces every one of its values.</li>
           <li>This page re-runs the simulation with fresh random draws, so its numbers move a little each time.</li>
         </ul>
       </div>
