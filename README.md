@@ -64,7 +64,7 @@ This project has four goals:
 | File | What it is |
 |---|---|
 | `Lumina_MonteCarlo_Analysis.ipynb` | Python notebook: the engine, the 50,000-iteration run, the base-to-median bridge, sensitivity, convergence, the windfall event, price paths and the reconciliation with Excel |
-| `Lumina_MonteCarlo.xlsx` | Excel model: Assumptions · DCF Base Case · Simulation · Random Draws · Results · Sensitivity · Windfall · Convergence · Price Paths · Checks |
+| `Lumina_MonteCarlo.xlsx` | Excel model: Cover · Assumptions · DCF Base Case · Random Draws · Simulation · Results · Sensitivity · Windfall · Convergence · Price Paths · Checks |
 | `Lumina_MonteCarlo_Memo.pdf` | Three-page investment memo: the distribution, why the base case flatters, what moves value, precision and the windfall event |
 | `Lumina_MonteCarlo_Deck.pdf` | Seven-slide presentation of the case and the findings |
 | `index.html` | Live simulator: sliders for every assumption, 10k / 25k / 50k runs, live sensitivity and simulated share-price paths |
@@ -77,8 +77,8 @@ One engine produces every number in the project. With a fixed seed (113) the 50,
 - **Assumptions:** every distribution, fixed parameter and windfall setting is a blue input.
 - **Simulation:** 2,000 live iterations. Each row turns stored random numbers (`Random Draws`, the first 2,000 of the Python run) into the six drivers through the distributions on `Assumptions`, then values the company with the base-case formulas. Change any assumption and all 2,000 iterations reprice.
 - **Results and Sensitivity:** mean, median, percentiles, probabilities, histogram and correlations.
-- **Windfall:** the same iterations with the tax modelled as an event; medians with and without the surcharge.
-- **Convergence:** the 200-re-run study, and whether the workbook's own median sits inside the expected range.
+- **Windfall:** the same iterations with the tax modelled as an event; medians with and without the surcharge, next to the 50,000-draw Python gap.
+- **Convergence:** the 200-re-run study with the 95% half-width of the median (1.96 × st. dev.), and whether the workbook's own median sits inside the expected range.
 - **Price Paths:** Geometric Brownian Motion simulation of the share price over five years.
 - **Checks:** Python against Excel, row by row.
 

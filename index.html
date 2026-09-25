@@ -200,7 +200,7 @@
             <input type="range" id="tg" min="0" max="3.5" step="0.05" value="2.0"></div>
           <div class="ctrl"><div class="row"><label for="t">Tax rate</label><output id="t_v" for="t"></output></div>
             <input type="range" id="t" min="20" max="40" step="0.5" value="26">
-            <div class="hint">IRES base, skewed up for windfall-tax risk</div></div>
+            <div class="hint">IRES plus IRAP near 26%, skewed up for windfall-tax risk</div></div>
         </fieldset>
         <fieldset>
           <legend>Simulation</legend>
@@ -245,7 +245,7 @@
           <span><i style="border-color:var(--mute)"></i>Market price</span>
         </div>
         <div class="sens">
-          <h3>What moves the value</h3>
+          <h3>What moves the value</h3><div class="hint" style="margin:-4px 0 8px">Correlation of each input with the value in this run (Pearson); the memo uses rank correlation.</div>
           <div id="sensList"></div>
         </div>
       </div>
@@ -345,7 +345,7 @@ function triInv(u,a,c,b){const fc=(c-a)/(b-a);
   return u<fc? a+Math.sqrt(u*(b-a)*(c-a)) : b-Math.sqrt((1-u)*(b-a)*(b-c));}
 const OFF={g:[-5,5], m:[-6,4], t:[-2,9], tg:[-1.0,0.75], cx:[-4,6]};
 const WSD=1.1, RHO=0.35, DA=0.13, NWC=0.03, YEARS=5, NMAX=50000;
-const DEFAULTS={g:9,m:42,cx:16,w:8.5,tg:2.0,t:26,u:1,rev0:145,nd:185,sh:25,mkt:11.5};
+const DEFAULTS={g:9,m:42,cx:16,w:8.5,tg:2.0,t:26,u:1,rev0:145,nd:185,sh:25,mkt:11.5,pvol:38,pdrift:7};
 function P(id){return parseFloat(document.getElementById(id).value);}
 let N=50000;
 const arrPS=new Float64Array(NMAX), inG=new Float64Array(NMAX), inM=new Float64Array(NMAX), inW=new Float64Array(NMAX),
